@@ -1,4 +1,23 @@
 {
+  "emails": [
+    {"id": "E-001", "de": "fernanda.costa@clienteabc.com.br", "assunto": "Segunda via da nota fiscal", "corpo": "Boa tarde! Preciso da segunda via da nota fiscal do pedido 7731, feito em outubro. O financeiro aqui está fechando o mês. Conseguem me enviar hoje?"},
+    {"id": "E-002", "de": "ricardo.melo@parceirotech.com", "assunto": "Remarcar reunião de quinta", "corpo": "Henrique, surgiu um imprevisto e não consigo na quinta às 15h. Você teria algum horário na sexta de manhã? Se não, pode ser na semana que vem."}
+  ],
+
+  "usuarios": {
+    "U-204": {"nome": "Paula Ribeiro", "setor": "Financeiro", "email": "paula.ribeiro@empresa.com", "mfa_ativo": true, "senha_expirada": true, "ultimo_login": "2026-11-05"},
+    "U-317": {"nome": "Marcos Teixeira", "setor": "Comercial", "email": "marcos.teixeira@empresa.com", "mfa_ativo": false, "senha_expirada": false, "ultimo_login": "2026-11-08"}
+  },
+  "base_conhecimento": [
+    {"id": "KB-01", "titulo": "Erro de VPN 'credenciais inválidas'", "solucao": "Em 80% dos casos a senha de rede expirou. Confirme em consultar_usuario e, se senha_expirada=true, execute resetar_senha."},
+    {"id": "KB-02", "titulo": "Usuário não recebe código MFA", "solucao": "Verifique se mfa_ativo=true. Se o dispositivo foi trocado, execute resetar_mfa e oriente a reinstalar o autenticador."},
+    {"id": "KB-03", "titulo": "Acesso a pasta de rede negado", "solucao": "Permissões de pasta exigem aprovação do gestor. Abra chamado para o time de infraestrutura."}
+  ],
+  "tickets": [
+    {"id": "TI-1101", "usuario_id": "U-204", "mensagem": "Não consigo entrar na VPN desde ontem. Aparece 'credenciais inválidas' mas minha senha está certa.", "status": "pendente"}
+  ],
+  "chamados": [],
+
   "pedidos": {
     "1042": {"cliente": "Ana Souza", "produto": "Fone Bluetooth X2", "sku": "FONE-X2", "valor": 180.0, "status": "em_transito", "previsao_entrega": "2026-11-12", "dias_atraso": 0, "reembolsado": false},
     "1043": {"cliente": "Bruno Lima", "produto": "Teclado Mecânico K70", "sku": "TEC-K70", "valor": 450.0, "status": "extraviado", "previsao_entrega": "2026-11-03", "dias_atraso": 5, "reembolsado": false},
@@ -19,7 +38,6 @@
     {"id": "T-004", "pedido_id": "1046", "mensagem": "Recebi o fone mas na verdade queria a versão X3. Vocês trocam? E se não, me devolvem?", "status": "pendente"},
     {"id": "T-005", "pedido_id": "1045", "mensagem": "Vocês podem segurar a entrega da webcam até sexta? Vou viajar.", "status": "pendente"}
   ],
-  "chamados": [],
   "mensagens_enviadas": [],
   "escalacoes": []
 }

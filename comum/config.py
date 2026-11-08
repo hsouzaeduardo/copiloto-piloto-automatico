@@ -1,10 +1,12 @@
-"""Configuração do Azure OpenAI, para o SDK puro (Demo 1) e para o Agent Framework (Demos 2 e 3).
+"""Configuração do Microsoft Foundry, para o SDK puro (Demo 1) e para o Agent Framework (Demos 2 e 3).
 
 Variáveis de ambiente (ver .env.example):
-  AZURE_OPENAI_ENDPOINT      https://<recurso>.openai.azure.com
-  AZURE_OPENAI_DEPLOYMENT    nome do deployment, ex.: gpt-4o-mini
-  AZURE_OPENAI_API_VERSION   ex.: 2024-10-21
-  AZURE_OPENAI_API_KEY       opcional; sem ela, usa `az login` (AzureCliCredential)
+  FOUNDRY_PROJECT_ENDPOINT   https://<recurso>.services.ai.azure.com/api/projects/<projeto>
+  FOUNDRY_MODEL              nome do deployment, ex.: gpt-4o-mini
+  COCKPIT                    1 para aprovar pelo cockpit web; vazio para aprovar no terminal
+
+Autenticação: `az login` (AzureCliCredential). Sem chave de API no código, de propósito —
+é o mesmo recado da palestra: o agente age com credencial própria, não com segredo colado.
 """
 
 from __future__ import annotations
@@ -15,40 +17,27 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-ENDPOINT = os.environ["AZURE_OPENAI_ENDPOINT"]
-DEPLOYMENT = os.environ["AZURE_OPENAI_DEPLOYMENT"]
-API_VERSION = os.getenv("AZURE_OPENAI_API_VERSION", "2024-10-21")
-API_KEY = os.getenv("AZURE_OPENAI_API_KEY")
+PROJECT_ENDPOINT = os.environ["FOUNDRY_PROJECT_ENDPOINT"]
+MODEL = os.environ["FOUNDRY_MODEL"]
+USAR_COCKPIT = os.getenv("COCKPIT", "").strip() in {"1", "true", "sim"}
 
 
-def cliente_sdk():
-    """Cliente Azure OpenAI do SDK oficial — usado só na Demo 1, de propósito."""
-    from openai import AzureOpenAI
-
-    if API_KEY:
-        return AzureOpenAI(azure_endpoint=ENDPOINT, api_key=API_KEY, api_version=API_VERSION)
-
-    from azure.identity import AzureCliCredential, get_bearer_token_provider
-
-    provedor = get_bearer_token_provider(AzureCliCredential(), "https://cognitiveservices.azure.com/.default")
-    return AzureOpenAI(azure_endpoint=ENDPOINT, azure_ad_token_provider=provedor, api_version=API_VERSION)
-
-
-def cliente_maf(**kwargs):
-    """Cliente do Microsoft Agent Framework apontando para o Azure OpenAI."""
-    from agent_framework.openai import OpenAIChatCompletionClient
-
-    auth = {"api_key": API_KEY} if API_KEY else {"credential": _credencial_azure()}
-    return OpenAIChatCompletionClient(
-        model=DEPLOYMENT,
-        azure_endpoint=ENDPOINT,
-        api_version=API_VERSION,
-        **auth,
-        **kwargs,
-    )
-
-
-def _credencial_azure():
+def credencial():
     from azure.identity import AzureCliCredential
 
     return AzureCliCredential()
+
+
+def cliente_sdk():
+    """Cliente OpenAI do projeto Foundry — usado só na Demo 1, de propósito: é uma request."""
+    from azure.ai.projects import AIProjectClient
+
+    projeto = AIProjectClient(endpoint=PROJECT_ENDPOINT, credential=credencial())
+    return projeto.get_openai_client()
+
+
+def cliente_maf(**kwargs):
+    """Cliente do Microsoft Agent Framework apontando para o modelo do projeto Foundry."""
+    from agent_framework.foundry import FoundryChatClient
+
+    return FoundryChatClient(project_endpoint=PROJECT_ENDPOINT, model=MODEL, credential=credencial(), **kwargs)

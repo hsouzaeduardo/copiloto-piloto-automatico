@@ -4,5 +4,8 @@ __pycache__/
 .venv/
 mundo/estado.json
 memoria/
+aprovacoes/
 auditoria.jsonl
+eventos.jsonl
+demo_atual.json
 stop.flag

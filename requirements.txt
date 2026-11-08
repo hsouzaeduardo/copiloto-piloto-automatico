@@ -1,4 +1,7 @@
-agent-framework-openai>=1.25.0
-openai>=1.60.0
+agent-framework-foundry>=1.25.0
+azure-ai-projects>=2.0.0
 azure-identity>=1.19.0
+openai>=1.60.0
 python-dotenv>=1.0.0
+fastapi>=0.115.0
+uvicorn>=0.30.0

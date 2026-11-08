@@ -1,4 +1,4 @@
-"""Mundo simulado: pedidos, estoque e fila de atendimento num JSON.
+"""Mundo simulado: e-mails, usuários e tickets de TI, pedidos e fila comercial — tudo num JSON.
 
 Nenhuma demo fala com um sistema real. Tudo o que o agente "faz" acontece
 neste arquivo, o que torna as demos reproduzíveis e seguras para rodar ao vivo.
@@ -16,7 +16,7 @@ ESTADO = PASTA / "estado.json"
 
 
 def resetar() -> None:
-    """Volta o mundo ao estado inicial (chame antes de cada demo)."""
+    """Volta o mundo ao estado inicial (chame no início de cada demo)."""
     shutil.copyfile(SEED, ESTADO)
 
 
@@ -30,13 +30,14 @@ def salvar(mundo: dict) -> None:
     ESTADO.write_text(json.dumps(mundo, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
-def fila_pendente() -> list[dict]:
-    return [c for c in carregar()["fila"] if c["status"] == "pendente"]
+def pendentes(lista: str) -> list[dict]:
+    """Itens com status 'pendente' em `tickets` (Demo 2) ou `fila` (Demo 3)."""
+    return [c for c in carregar()[lista] if c["status"] == "pendente"]
 
 
-def marcar_caso(caso_id: str, status: str) -> None:
+def marcar(lista: str, item_id: str, status: str) -> None:
     mundo = carregar()
-    for caso in mundo["fila"]:
-        if caso["id"] == caso_id:
-            caso["status"] = status
+    for item in mundo[lista]:
+        if item["id"] == item_id:
+            item["status"] = status
     salvar(mundo)

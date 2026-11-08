@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cockpit — Do copiloto ao piloto automático</title>
+<style>
+  :root {
+    --bg: #141A26; --panel: #1C2433; --panel-2: #222C3D; --line: #2E3A4F;
+    --text: #E6EAF2; --muted: #8A94A6; --amber: #F2A93B; --teal: #2BB3A8; --gray: #8A94A6; --red: #E0532F;
+    --mono: "Cascadia Code", "Fira Code", Consolas, "Courier New", monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.45 "Segoe UI", system-ui, sans-serif; }
+  header { display: flex; align-items: center; gap: 16px; padding: 14px 24px; border-bottom: 1px solid var(--line); background: var(--panel); }
+  header h1 { font-size: 16px; margin: 0; font-weight: 600; letter-spacing: .2px; }
+  header .sub { color: var(--muted); font-size: 13px; }
+  .badge { padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: 700; color: #141A26; }
+  .badge.assistente { background: var(--gray); } .badge.agente { background: var(--teal); } .badge.autonomo { background: var(--amber); }
+  .badge.off { background: var(--line); color: var(--muted); }
+  .spacer { flex: 1; }
+  button { border: 0; border-radius: 8px; padding: 9px 14px; font-weight: 700; cursor: pointer; font-size: 13px; }
+  .kill { background: var(--red); color: #fff; } .kill.armed { background: #5a2a1f; color: #f3b6a8; }
+  .ok { background: var(--teal); color: #0d1b1a; } .no { background: var(--panel-2); color: var(--text); border: 1px solid var(--line); }
+  main { display: grid; grid-template-columns: 300px 1fr 320px; gap: 16px; padding: 16px 24px; height: calc(100vh - 61px); }
+  .col { display: flex; flex-direction: column; gap: 16px; min-height: 0; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column; min-height: 0; }
+  .card h2 { margin: 0 0 10px; font-size: 12px; text-transform: uppercase; letter-spacing: .8px; color: var(--muted); font-weight: 700; }
+  .grow { flex: 1; overflow: auto; }
+  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .stat { background: var(--panel-2); border-radius: 10px; padding: 10px 12px; }
+  .stat b { display: block; font-size: 26px; color: var(--amber); line-height: 1.1; }
+  .stat span { font-size: 12px; color: var(--muted); }
+  .item { padding: 8px 10px; border-radius: 8px; background: var(--panel-2); margin-bottom: 6px; font-size: 13px; display: flex; gap: 8px; align-items: baseline; }
+  .item .id { font-family: var(--mono); color: var(--muted); font-size: 12px; min-width: 56px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; background: var(--muted); }
+  .dot.pendente { background: var(--amber); } .dot.resolvido { background: var(--teal); } .dot.escalado { background: var(--red); }
+  .log { font-size: 13.5px; }
+  .ev { padding: 8px 10px; border-left: 3px solid var(--line); margin-bottom: 6px; background: var(--panel-2); border-radius: 0 8px 8px 0; white-space: pre-wrap; word-break: break-word; }
+  .ev.cliente { border-color: var(--amber); } .ev.modelo { border-color: var(--teal); }
+  .ev.ferramenta { border-color: var(--gray); font-family: var(--mono); font-size: 12.5px; }
+  .ev.aviso { border-color: var(--red); } .ev.auditoria { border-color: #6a7fd1; } .ev.sistema { color: var(--muted); }
+  .ev .t { color: var(--muted); font-size: 11px; margin-right: 8px; font-family: var(--mono); }
+  .ev .k { color: var(--amber); font-weight: 700; }
+  .ev .r { color: var(--muted); display: block; margin-top: 2px; }
+  .approval { background: #2a2416; border: 1px solid var(--amber); border-radius: 10px; padding: 12px; margin-bottom: 10px; }
+  .approval code { font-family: var(--mono); font-size: 12.5px; color: var(--amber); word-break: break-all; }
+  .approval .btns { display: flex; gap: 8px; margin-top: 10px; }
+  .empty { color: var(--muted); font-size: 13px; }
+  footer { position: fixed; bottom: 8px; right: 24px; color: var(--muted); font-size: 11px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Cockpit</h1>
+  <span class="badge off" id="nivel">sem demo</span>
+  <span class="sub" id="demo">aguardando uma demo iniciar…</span>
+  <div class="spacer"></div>
+  <button class="kill" id="kill" onclick="kill()">■ KILL SWITCH</button>
+</header>
+
+<main>
+  <div class="col">
+    <div class="card">
+      <h2>Painel</h2>
+      <div class="stats">
+        <div class="stat"><b id="s-pend">0</b><span>na fila</span></div>
+        <div class="stat"><b id="s-tools">0</b><span>tool calls</span></div>
+        <div class="stat"><b id="s-reemb">0</b><span>reembolsos</span></div>
+        <div class="stat"><b id="s-esc">0</b><span>escalados</span></div>
+      </div>
+    </div>
+    <div class="card grow">
+      <h2>Fila de trabalho</h2>
+      <div class="grow" id="fila"><div class="empty">vazia</div></div>
+    </div>
+  </div>
+
+  <div class="col">
+    <div class="card grow">
+      <h2>Log em tempo real</h2>
+      <div class="grow log" id="log"><div class="empty">nenhum evento ainda</div></div>
+    </div>
+  </div>
+
+  <div class="col">
+    <div class="card">
+      <h2>Aprovações pendentes</h2>
+      <div id="aprov"><div class="empty">nenhuma — o agente não pediu nada</div></div>
+    </div>
+    <div class="card grow">
+      <h2>Auditoria</h2>
+      <div class="stat" style="margin-bottom:10px"><b id="s-aud">0</b><span>decisões registradas em auditoria.jsonl</span></div>
+      <div class="grow" id="aud"><div class="empty">—</div></div>
+    </div>
+  </div>
+</main>
+<footer>Do copiloto ao piloto automático · Henrique Eduardo Souza</footer>
+
+<script>
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s ?? "").replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+  const hora = (iso) => iso ? iso.slice(11, 19) : "";
+  let ultimoTamanho = -1;
+
+  async function tick() {
+    let d;
+    try { d = await (await fetch("/api/estado")).json(); } catch { return; }
+
+    // cabeçalho
+    if (d.demo) {
+      $("nivel").textContent = {assistente:"Assistente", agente:"Agente", autonomo:"Agente autônomo"}[d.demo.nivel] || d.demo.nivel;
+      $("nivel").className = "badge " + d.demo.nivel;
+      $("demo").textContent = d.demo.nome + " · " + d.demo.descricao;
+    }
+    $("kill").className = "kill" + (d.stop ? " armed" : "");
+    $("kill").textContent = d.stop ? "■ PARADO — rearmar" : "■ KILL SWITCH";
+
+    // painel
+    const trabalho = d.tickets.length && d.demo?.nivel === "agente" ? d.tickets : d.demo?.nivel === "assistente" ? d.emails : d.fila;
+    const pend = trabalho.filter(x => (x.status || "pendente") === "pendente").length;
+    $("s-pend").textContent = pend;
+    $("s-tools").textContent = d.eventos.filter(e => e.tipo === "ferramenta").length;
+    $("s-reemb").textContent = d.reembolsos;
+    $("s-esc").textContent = d.escalacoes.length;
+    $("s-aud").textContent = d.auditoria;
+
+    // fila
+    $("fila").innerHTML = trabalho.length ? trabalho.map(x => `
+      <div class="item"><span class="dot ${x.status || ""}"></span><span class="id">${esc(x.id)}</span>
+      <span>${esc(x.mensagem || x.assunto || "")}</span></div>`).join("") : '<div class="empty">vazia</div>';
+
+    // log
+    if (d.eventos.length !== ultimoTamanho) {
+      ultimoTamanho = d.eventos.length;
+      $("log").innerHTML = d.eventos.length ? d.eventos.map(e => {
+        const t = `<span class="t">${hora(e.quando)}</span>`;
+        if (e.tipo === "ferramenta") return `<div class="ev ferramenta">${t}🔧 <span class="k">${esc(e.nome)}</span>(${esc(JSON.stringify(e.args))})<span class="r">↳ ${esc(e.resultado)}</span></div>`;
+        if (e.tipo === "cliente") return `<div class="ev cliente">${t}👤 ${esc(e.texto)}</div>`;
+        if (e.tipo === "modelo") return `<div class="ev modelo">${t}🤖 ${esc(e.texto)}</div>`;
+        if (e.tipo === "aviso") return `<div class="ev aviso">${t}⚠ ${esc(e.texto)}</div>`;
+        if (e.tipo === "auditoria") return `<div class="ev auditoria">${t}📋 ${esc(e.caso)} · ${esc(e.desfecho)}</div>`;
+        return `<div class="ev sistema">${t}${esc(e.texto)}</div>`;
+      }).join("") : '<div class="empty">nenhum evento ainda</div>';
+      $("log").scrollTop = $("log").scrollHeight;
+    }
+
+    // aprovações
+    $("aprov").innerHTML = d.aprovacoes_pendentes.length ? d.aprovacoes_pendentes.map(p => `
+      <div class="approval">
+        <div style="font-size:12px;color:var(--muted)">caso ${esc(p.caso || "—")} · pedido ${esc(p.id)}</div>
+        <code>${esc(p.funcao)}(${esc(p.args)})</code>
+        <div class="btns">
+          <button class="ok" onclick="decidir('${p.id}', true)">Aprovar</button>
+          <button class="no" onclick="decidir('${p.id}', false)">Negar</button>
+        </div>
+      </div>`).join("") : '<div class="empty">nenhuma — o agente não pediu nada</div>';
+
+    // auditoria (últimas decisões)
+    const auds = d.eventos.filter(e => e.tipo === "auditoria").slice(-8).reverse();
+    $("aud").innerHTML = auds.length ? auds.map(a => `
+      <div class="item"><span class="dot ${a.desfecho}"></span><span class="id">${esc(a.caso)}</span><span>${esc(a.desfecho)}</span></div>`).join("") : '<div class="empty">—</div>';
+  }
+
+  async function decidir(id, aprovado) {
+    await fetch("/api/aprovar", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({id, aprovado})});
+    tick();
+  }
+  async function kill() {
+    const parado = $("kill").classList.contains("armed");
+    await fetch(parado ? "/api/rearmar" : "/api/stop", {method: "POST"});
+    tick();
+  }
+  tick(); setInterval(tick, 1000);
+</script>
+</body>
+</html>
