@@ -1,0 +1,8 @@
+.env
+__pycache__/
+*.pyc
+.venv/
+mundo/estado.json
+memoria/
+auditoria.jsonl
+stop.flag

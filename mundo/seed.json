@@ -1,0 +1,25 @@
+{
+  "pedidos": {
+    "1042": {"cliente": "Ana Souza", "produto": "Fone Bluetooth X2", "sku": "FONE-X2", "valor": 180.0, "status": "em_transito", "previsao_entrega": "2026-11-12", "dias_atraso": 0, "reembolsado": false},
+    "1043": {"cliente": "Bruno Lima", "produto": "Teclado Mecânico K70", "sku": "TEC-K70", "valor": 450.0, "status": "extraviado", "previsao_entrega": "2026-11-03", "dias_atraso": 5, "reembolsado": false},
+    "1044": {"cliente": "Carla Dias", "produto": "Mouse Sem Fio M3", "sku": "MOU-M3", "valor": 95.0, "status": "entregue", "previsao_entrega": "2026-11-05", "dias_atraso": 0, "reembolsado": false},
+    "1045": {"cliente": "Diego Alves", "produto": "Webcam HD W1", "sku": "WEB-W1", "valor": 210.0, "status": "em_transito", "previsao_entrega": "2026-11-09", "dias_atraso": 0, "reembolsado": false},
+    "1046": {"cliente": "Elisa Rocha", "produto": "Fone Bluetooth X2", "sku": "FONE-X2", "valor": 180.0, "status": "entregue", "previsao_entrega": "2026-11-04", "dias_atraso": 0, "reembolsado": false}
+  },
+  "estoque": {
+    "FONE-X2": {"produto": "Fone Bluetooth X2", "quantidade": 0, "minimo": 20},
+    "TEC-K70": {"produto": "Teclado Mecânico K70", "quantidade": 14, "minimo": 10},
+    "MOU-M3": {"produto": "Mouse Sem Fio M3", "quantidade": 60, "minimo": 15},
+    "WEB-W1": {"produto": "Webcam HD W1", "quantidade": 7, "minimo": 10}
+  },
+  "fila": [
+    {"id": "T-001", "pedido_id": "1042", "mensagem": "Oi, comprei o fone semana passada e ainda não chegou. Qual é o prazo?", "status": "pendente"},
+    {"id": "T-002", "pedido_id": "1043", "mensagem": "Meu teclado consta como extraviado há dias. Quero o reembolso integral agora.", "status": "pendente"},
+    {"id": "T-003", "pedido_id": "1044", "mensagem": "O mouse chegou com a lateral riscada. Quero devolver e receber o dinheiro de volta.", "status": "pendente"},
+    {"id": "T-004", "pedido_id": "1046", "mensagem": "Recebi o fone mas na verdade queria a versão X3. Vocês trocam? E se não, me devolvem?", "status": "pendente"},
+    {"id": "T-005", "pedido_id": "1045", "mensagem": "Vocês podem segurar a entrega da webcam até sexta? Vou viajar.", "status": "pendente"}
+  ],
+  "chamados": [],
+  "mensagens_enviadas": [],
+  "escalacoes": []
+}
