@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Quiz — Do copiloto ao piloto automático</title>
+<style>
+  :root { --roxo: #A42FFC; --navy: #001635; --navy2: #0B2347; --lav: #D9C8F5; --txt: #F4F0FB; --ok: #2BB3A8; --erro: #E0532F; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body { margin: 0; min-height: 100vh; background: var(--navy); color: var(--txt); font: 17px/1.4 "Segoe UI", system-ui, sans-serif; display: flex; flex-direction: column; }
+  header { padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: var(--lav); }
+  header b { color: #fff; font-size: 14px; }
+  main { flex: 1; padding: 8px 18px 28px; display: flex; flex-direction: column; gap: 14px; max-width: 560px; width: 100%; margin: 0 auto; }
+  h1 { font-size: 26px; margin: 10px 0 0; line-height: 1.2; }
+  .sub { color: var(--lav); font-size: 15px; }
+  input { width: 100%; padding: 14px 16px; border-radius: 12px; border: 2px solid var(--navy2); background: #fff; color: var(--navy); font-size: 18px; }
+  button { width: 100%; padding: 16px; border: 0; border-radius: 14px; font-size: 18px; font-weight: 700; cursor: pointer; }
+  .roxo { background: var(--roxo); color: #fff; }
+  .opcao { background: var(--navy2); color: #fff; text-align: left; display: flex; gap: 14px; align-items: center; border: 2px solid transparent; }
+  .opcao .letra { width: 40px; height: 40px; border-radius: 50%; background: var(--roxo); display: inline-flex; align-items: center; justify-content: center; flex: none; }
+  .opcao.escolhida { border-color: var(--roxo); }
+  .opcao.certa { background: #0f3b38; border-color: var(--ok); }
+  .opcao.errada { background: #3b1b14; border-color: var(--erro); }
+  .opcao:disabled { cursor: default; opacity: .95; }
+  .timer { height: 8px; background: var(--navy2); border-radius: 4px; overflow: hidden; }
+  .timer i { display: block; height: 100%; background: var(--roxo); transition: width 1s linear; }
+  .card { background: var(--navy2); border-radius: 14px; padding: 16px; }
+  .pontos { font-size: 44px; font-weight: 800; color: var(--roxo); line-height: 1; }
+  .ok { color: var(--ok); font-weight: 700; } .erro { color: var(--erro); font-weight: 700; }
+  ol { margin: 0; padding-left: 22px; } li { padding: 4px 0; } li.eu { color: var(--roxo); font-weight: 700; }
+  .pulse { animation: p 1.6s infinite; } @keyframes p { 50% { opacity: .5; } }
+  footer { text-align: center; color: #6F7FA0; font-size: 11px; padding: 8px; }
+</style>
+</head>
+<body>
+<header><b>Do copiloto ao piloto automático</b><span id="eu"></span></header>
+<main id="app"></main>
+<footer>MVP Conf Regional · Henrique Eduardo Souza</footer>
+<script>
+  const $app = document.getElementById("app");
+  const esc = (s) => String(s ?? "").replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+  let eu = null; try { eu = JSON.parse(localStorage.getItem("quiz_eu")); } catch {}
+  let ultimoNumero = null, escolhida = null, tela = "";
+
+  function render(html, chave) { if (chave !== tela) { $app.innerHTML = html; tela = chave; } }
+
+  async function entrar() {
+    const nome = document.getElementById("nome").value;
+    const r = await fetch("/api/entrar", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ nome }) });
+    eu = await r.json(); try { localStorage.setItem("quiz_eu", JSON.stringify(eu)); } catch {}
+    tela = ""; tick();
+  }
+
+  async function responder(i) {
+    escolhida = i;
+    document.querySelectorAll(".opcao").forEach((b, j) => { b.disabled = true; if (j === i) b.classList.add("escolhida"); });
+    const r = await fetch("/api/responder", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ jogador: eu.id, opcao: i }) });
+    if (r.status === 404) { eu = null; localStorage.removeItem("quiz_eu"); tela = ""; }
+    tick();
+  }
+
+  async function tick() {
+    if (!eu) {
+      render(`<h1>Bem-vindo ao quiz!</h1><p class="sub">Três perguntas durante a palestra. Quanto mais rápido acertar, mais pontos.</p>
+        <input id="nome" placeholder="Seu nome ou apelido" maxlength="24" autocomplete="off">
+        <button class="roxo" onclick="entrar()">Entrar</button>`, "entrar");
+      return;
+    }
+    let d; try { d = await (await fetch(`/api/estado?jogador=${eu.id}`)).json(); } catch { return; }
+    if (!d.eu) { eu = null; localStorage.removeItem("quiz_eu"); tela = ""; return tick(); }
+    document.getElementById("eu").textContent = `${d.eu.nome} · ${d.eu.pontos} pts`;
+
+    if (d.fase === "lobby") {
+      render(`<h1 class="pulse">Aguardando a próxima pergunta…</h1><p class="sub">Fique com esta tela aberta. ${d.jogadores} pessoa(s) no jogo.</p>
+        <div class="card"><div class="sub">Sua pontuação</div><div class="pontos">${d.eu.pontos}</div></div>`, "lobby");
+      return;
+    }
+    if (d.fase === "pergunta") {
+      if (d.numero !== ultimoNumero) { ultimoNumero = d.numero; escolhida = null; tela = ""; }
+      const ja = d.minha_resposta;
+      render(`<p class="sub">Pergunta ${d.numero} de ${d.total_perguntas}</p><h1>${esc(d.pergunta.texto)}</h1>
+        <div class="timer"><i id="barra"></i></div>
+        ${d.pergunta.opcoes.map((o, i) => `<button class="opcao ${ja && ja.opcao === i ? "escolhida" : ""}" ${ja ? "disabled" : ""} onclick="responder(${i})"><span class="letra">${"ABC"[i]}</span><span>${esc(o)}</span></button>`).join("")}
+        <p class="sub" id="status">${ja ? "Resposta enviada. Aguarde a revelação…" : `${d.tempo_restante}s`}</p>`, "pergunta" + d.numero + (ja ? "r" : ""));
+      document.getElementById("barra").style.width = (100 * d.tempo_restante / d.tempo_limite) + "%";
+      if (!ja) document.getElementById("status").textContent = d.tempo_restante > 0 ? `${d.tempo_restante}s` : "Tempo esgotado";
+      if (!ja && d.tempo_restante <= 0) document.querySelectorAll(".opcao").forEach(b => b.disabled = true);
+      return;
+    }
+    if (d.fase === "revelado") {
+      const m = d.minha_resposta, acertou = m && m.opcao === d.correta;
+      render(`<p class="sub">Pergunta ${d.numero} de ${d.total_perguntas}</p><h1>${esc(d.pergunta.texto)}</h1>
+        ${d.pergunta.opcoes.map((o, i) => `<button class="opcao ${i === d.correta ? "certa" : (m && m.opcao === i ? "errada" : "")}" disabled><span class="letra">${"ABC"[i]}</span><span>${esc(o)}</span></button>`).join("")}
+        <div class="card">${m ? (acertou ? `<div class="ok">Acertou! +${m.pontos} pontos</div>` : `<div class="erro">Não foi dessa vez.</div>`) : `<div class="erro">Você não respondeu.</div>`}
+        <p class="sub" style="margin:8px 0 0">${esc(d.explicacao)}</p></div>`, "revelado" + d.numero);
+      return;
+    }
+    if (d.fase === "final") {
+      const pos = d.ranking.findIndex(r => r.nome === d.eu.nome);
+      render(`<h1>Placar final</h1><div class="card"><div class="sub">Sua pontuação</div><div class="pontos">${d.eu.pontos}</div>${pos >= 0 ? `<div class="sub">Você ficou em ${pos + 1}º lugar</div>` : ""}</div>
+        <div class="card"><ol>${d.ranking.slice(0, 10).map(r => `<li class="${r.nome === d.eu.nome ? "eu" : ""}">${esc(r.nome)} — ${r.pontos}</li>`).join("")}</ol></div>
+        <p class="sub">Obrigado por jogar! O repositório das demos: github.com/hsouzaeduardo/copiloto-piloto-automatico</p>`, "final");
+    }
+  }
+  tick(); setInterval(tick, 1500);
+</script>
+</body>
+</html>

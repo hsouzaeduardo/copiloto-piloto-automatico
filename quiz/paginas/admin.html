@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin — Quiz</title>
+<style>
+  :root { --roxo: #A42FFC; --navy: #001635; --navy2: #0B2347; --lav: #D9C8F5; --txt: #F4F0FB; --ok: #2BB3A8; --erro: #E0532F; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--navy); color: var(--txt); font: 16px/1.4 "Segoe UI", system-ui, sans-serif; padding: 18px; max-width: 640px; margin: 0 auto; }
+  h1 { font-size: 22px; margin: 0 0 6px; } .sub { color: var(--lav); font-size: 14px; }
+  .card { background: var(--navy2); border-radius: 14px; padding: 16px; margin: 14px 0; }
+  input { width: 100%; padding: 12px; border-radius: 10px; border: 0; font-size: 16px; }
+  button { padding: 12px 14px; border: 0; border-radius: 10px; font-weight: 700; font-size: 15px; cursor: pointer; margin: 4px 4px 4px 0; }
+  .roxo { background: var(--roxo); color: #fff; } .cinza { background: #27406E; color: #fff; } .ok { background: var(--ok); color: #001635; } .erro { background: var(--erro); color: #fff; }
+  button:disabled { opacity: .4; cursor: default; }
+  .estado { font-size: 28px; font-weight: 800; color: var(--roxo); }
+  .pergunta { padding: 10px 0; border-top: 1px solid #1E3F70; }
+  .pergunta .m { color: var(--lav); font-size: 13px; }
+  .atual { color: var(--ok); font-weight: 700; }
+</style>
+</head>
+<body>
+<h1>Admin do quiz</h1>
+<p class="sub">Abra <b>/telao</b> no projetor e esta página no seu celular ou num segundo monitor.</p>
+<div class="card" id="login"><input id="token" placeholder="Token de admin" type="password"><br><br><button class="roxo" onclick="salvarToken()">Entrar</button></div>
+<div id="painel" style="display:none">
+  <div class="card">
+    <div class="sub">Fase</div><div class="estado" id="fase">—</div>
+    <div class="sub" id="meta"></div>
+  </div>
+  <div class="card">
+    <button class="ok" onclick="acao('revelar')" id="b-revelar">Revelar resposta</button>
+    <button class="cinza" onclick="acao('lobby')">Voltar ao lobby</button>
+    <button class="roxo" onclick="acao('final')">Placar final</button>
+    <button class="erro" onclick="if (confirm('Zerar jogadores e pontuações?')) acao('reset')">Zerar tudo</button>
+  </div>
+  <div class="card" id="perguntas"></div>
+</div>
+<script>
+  let token = localStorage.getItem("quiz_token") || "";
+  const h = () => ({ "X-Token": token, "Content-Type": "application/json" });
+  function salvarToken() { token = document.getElementById("token").value; localStorage.setItem("quiz_token", token); carregar(); }
+  async function acao(a) { await fetch("/api/admin/" + a, { method: "POST", headers: h() }); tick(); }
+  async function abrir(n) { await fetch("/api/admin/abrir/" + n, { method: "POST", headers: h() }); tick(); }
+  async function carregar() {
+    const r = await fetch("/api/admin/perguntas", { headers: h() });
+    if (!r.ok) { document.getElementById("login").style.display = ""; document.getElementById("painel").style.display = "none"; return; }
+    document.getElementById("login").style.display = "none"; document.getElementById("painel").style.display = "";
+    const ps = await r.json();
+    document.getElementById("perguntas").innerHTML = ps.map(p => `<div class="pergunta" id="p${p.id}"><div class="m">${p.id} · ${p.momento}</div><div>${p.pergunta}</div><button class="roxo" onclick="abrir(${p.id})">Abrir pergunta ${p.id}</button></div>`).join("");
+    tick();
+  }
+  async function tick() {
+    if (!token) return;
+    const d = await (await fetch("/api/estado")).json();
+    document.getElementById("fase").textContent = { lobby: "Lobby", pergunta: `Pergunta ${d.numero} aberta — ${d.tempo_restante}s`, revelado: `Pergunta ${d.numero} revelada`, final: "Placar final" }[d.fase];
+    document.getElementById("meta").textContent = `${d.jogadores} jogador(es) · ${d.respondidos} resposta(s) nesta pergunta · líder: ${d.ranking[0] ? d.ranking[0].nome + " (" + d.ranking[0].pontos + ")" : "—"}`;
+    document.getElementById("b-revelar").disabled = d.fase !== "pergunta";
+    document.querySelectorAll(".pergunta").forEach(el => el.classList.remove("atual"));
+    if (d.numero) document.getElementById("p" + d.numero)?.classList.add("atual");
+  }
+  carregar(); setInterval(tick, 1000);
+</script>
+</body>
+</html>

@@ -33,6 +33,7 @@ demos/              os três orquestradores — a única coisa que muda entre os
   ensaio.py         as mesmas demos sem modelo (chamadas roteirizadas) — para ensaiar tela e ritmo
 preparar.py         limpa o estado e sobe o cockpit
 GRAVACAO.md         roteiro de gravação, momento a momento
+quiz/               quiz ao vivo para o celular da plateia (jogador, telão, admin) + deploy no Azure
 slides/             o deck da palestra (.pptx)
 ```
 
