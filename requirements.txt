@@ -1,4 +1,4 @@
-agent-framework-foundry>=1.25.0
+agent-framework-foundry>=1.16.0
 azure-ai-projects>=2.0.0
 azure-identity>=1.19.0
 openai>=1.60.0

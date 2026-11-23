@@ -18,6 +18,7 @@ from agent_framework import Agent, Message, tool
 
 from comum import humano, log
 from comum.config import cliente_maf
+from comum.ritmo import pausa
 from mundo import dados, ferramentas
 
 INSTRUCOES = """Você é um agente de suporte de TI de primeiro nível.
@@ -38,6 +39,7 @@ TOOLS = [
 
 async def atender(agent: Agent, ticket: dict) -> None:
     log.cliente(f"[{ticket['id']} · {ticket['usuario_id']}] {ticket['mensagem']}", caso=ticket["id"])
+    await pausa(2)
     session = agent.create_session()
     resposta = await agent.run(
         f"Ticket {ticket['id']} do usuário {ticket['usuario_id']}: {ticket['mensagem']}", session=session
@@ -56,6 +58,7 @@ async def atender(agent: Agent, ticket: dict) -> None:
 
     log.modelo(resposta.text, caso=ticket["id"])
     dados.marcar("tickets", ticket["id"], "resolvido")
+    await pausa()
 
 
 async def main() -> None:

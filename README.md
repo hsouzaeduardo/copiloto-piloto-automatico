@@ -30,6 +30,9 @@ cockpit/
   server.py         FastAPI: lê eventos e estado, grava aprovações e stop.flag
   index.html        painel: fila, log de tool calls, aprovações, auditoria, kill switch
 demos/              os três orquestradores — a única coisa que muda entre os níveis
+  ensaio.py         as mesmas demos sem modelo (chamadas roteirizadas) — para ensaiar tela e ritmo
+preparar.py         limpa o estado e sobe o cockpit
+GRAVACAO.md         roteiro de gravação, momento a momento
 slides/             o deck da palestra (.pptx)
 ```
 
@@ -60,6 +63,10 @@ python demos/03_autonomo_comercial.py     # encerre pelo botão KILL SWITCH do c
 ```
 
 Sem cockpit: deixe `COCKPIT=` vazio no `.env` e tudo acontece no terminal.
+`DEMO_RITMO` (segundos, padrão 3) controla a pausa entre eventos para o cockpit respirar na tela.
+
+Para ensaiar sem Foundry (sem `.env`, sem rede): `python demos/ensaio.py 1|2|3` — mesmas ferramentas,
+mesmo cockpit, mesma aprovação e kill switch; só o modelo é roteirizado. Roteiro completo em `GRAVACAO.md`.
 
 ## O que mostrar em cada demo
 

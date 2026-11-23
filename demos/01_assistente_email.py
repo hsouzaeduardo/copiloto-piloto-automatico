@@ -13,6 +13,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from comum import log
 from comum.config import MODEL, cliente_sdk
+from comum.ritmo import pausa_sync
 from mundo import dados
 
 INSTRUCOES = (
@@ -38,7 +39,9 @@ def main() -> None:
 
     for email in dados.carregar()["emails"]:
         log.cliente(f"[{email['id']}] {email['assunto']} — {email['corpo']}", caso=email["id"])
+        pausa_sync(2)
         log.modelo(rascunhar(client, email), caso=email["id"])
+        pausa_sync()
 
     log.secao("O que observar")
     print("  • Zero 🔧 no log: ele não consultou a nota fiscal nem a agenda.")

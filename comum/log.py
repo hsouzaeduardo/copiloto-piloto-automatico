@@ -8,7 +8,7 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
+from datetime import datetime
 from pathlib import Path
 
 RAIZ = Path(__file__).parent.parent
@@ -20,7 +20,7 @@ CINZA, TEAL, AMBAR, VERMELHO, NEGRITO, RESET = "\033[90m", "\033[36m", "\033[33m
 
 
 def _agora() -> str:
-    return datetime.now(timezone.utc).isoformat(timespec="seconds")
+    return datetime.now().astimezone().isoformat(timespec="seconds")
 
 
 def _evento(tipo: str, **dados) -> None:

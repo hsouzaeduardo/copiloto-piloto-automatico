@@ -23,6 +23,7 @@ from agent_framework import Agent, AgentSession, FunctionInvocationConfiguration
 
 from comum import humano, log
 from comum.config import cliente_maf
+from comum.ritmo import pausa
 from mundo import dados, ferramentas
 from mundo.ferramentas import POLITICA_COMERCIAL
 
@@ -66,6 +67,7 @@ def memoria_salvar(session: AgentSession, caso_id: str) -> None:
 
 async def processar(agent: Agent, caso: dict) -> None:
     log.cliente(f"[{caso['id']} · pedido {caso['pedido_id']}] {caso['mensagem']}", caso=caso["id"])
+    await pausa(2)
     session = memoria_carregar(agent, caso["id"])
     escalacoes_antes = len(dados.carregar()["escalacoes"])
 
@@ -76,6 +78,7 @@ async def processar(agent: Agent, caso: dict) -> None:
     dados.marcar("fila", caso["id"], desfecho)
     log.modelo(resposta.text, caso=caso["id"])
     log.auditar({"caso": caso["id"], "pedido": caso["pedido_id"], "desfecho": desfecho, "resposta": resposta.text})
+    await pausa()
 
 
 async def main() -> None:

@@ -17,9 +17,16 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-PROJECT_ENDPOINT = os.environ["FOUNDRY_PROJECT_ENDPOINT"]
-MODEL = os.environ["FOUNDRY_MODEL"]
+PROJECT_ENDPOINT = os.getenv("FOUNDRY_PROJECT_ENDPOINT")
+MODEL = os.getenv("FOUNDRY_MODEL")
 USAR_COCKPIT = os.getenv("COCKPIT", "").strip() in {"1", "true", "sim"}
+
+
+def _exigir_foundry() -> None:
+    """As demos reais precisam do Foundry; o ensaio (demos/ensaio.py) não."""
+    faltando = [v for v in ("FOUNDRY_PROJECT_ENDPOINT", "FOUNDRY_MODEL") if not os.getenv(v)]
+    if faltando:
+        raise SystemExit(f"Faltam variáveis no .env: {', '.join(faltando)}. Copie .env.example para .env e preencha.")
 
 
 def credencial():
@@ -30,6 +37,7 @@ def credencial():
 
 def cliente_sdk():
     """Cliente OpenAI do projeto Foundry — usado só na Demo 1, de propósito: é uma request."""
+    _exigir_foundry()
     from azure.ai.projects import AIProjectClient
 
     projeto = AIProjectClient(endpoint=PROJECT_ENDPOINT, credential=credencial())
@@ -38,6 +46,7 @@ def cliente_sdk():
 
 def cliente_maf(**kwargs):
     """Cliente do Microsoft Agent Framework apontando para o modelo do projeto Foundry."""
+    _exigir_foundry()
     from agent_framework.foundry import FoundryChatClient
 
     return FoundryChatClient(project_endpoint=PROJECT_ENDPOINT, model=MODEL, credential=credencial(), **kwargs)
