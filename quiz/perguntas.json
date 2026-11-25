@@ -3,23 +3,35 @@
     "id": 1,
     "momento": "Depois de \"Os três níveis\"",
     "pergunta": "Um bot que tira dúvidas da FAQ e, quando você pede, abre um chamado no sistema é um…",
-    "opcoes": ["Assistente — só responde", "Agente — executa uma tarefa com ferramentas", "Agente autônomo — decide sozinho quando agir"],
+    "opcoes": [
+      "Assistente — só responde",
+      "Agente — executa uma tarefa com ferramentas",
+      "Agente autônomo — decide sozinho quando agir"
+    ],
     "correta": 1,
     "explicacao": "Ele usa ferramenta e executa uma tarefa, mas só quando chamado. Autônomo é quem decide SE deve agir."
   },
   {
     "id": 2,
-    "momento": "Depois das demos",
-    "pergunta": "Na Demo 3, o que impediu o reembolso de R$ 450?",
-    "opcoes": ["O prompt dizia para não reembolsar acima de R$ 200", "A ferramenta recusou, em código, antes de executar", "O modelo decidiu sozinho que era melhor escalar"],
+    "momento": "Depois da demo do Dot",
+    "pergunta": "No meu Dot, o que define o que ele faz sozinho e o que pede aprovação?",
+    "opcoes": [
+      "A inteligência do modelo, caso a caso",
+      "As regras que eu escrevi: permitir, aprovar ou bloquear",
+      "A quantidade de apps e plugins conectados"
+    ],
     "correta": 1,
-    "explicacao": "O prompt orienta; a ferramenta limita. Guardrail no prompt é probabilístico; no código é determinístico."
+    "explicacao": "O modelo orienta; a regra limita. Alçada é configuração, não bom senso do modelo."
   },
   {
     "id": 3,
     "momento": "Antes do fechamento",
     "pergunta": "Qual é o primeiro requisito para liberar autonomia a um agente?",
-    "opcoes": ["Um modelo mais inteligente", "Mais ferramentas e integrações", "Alçada definida e alguém que assine pelo resultado"],
+    "opcoes": [
+      "Um modelo mais inteligente",
+      "Mais ferramentas e integrações",
+      "Alçada definida e alguém que assine pelo resultado"
+    ],
     "correta": 2,
     "explicacao": "Autonomia é controle de risco, não feature. Se conquista por evidência, não por decreto."
   }
